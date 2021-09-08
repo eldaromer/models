@@ -12,21 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""TFM binary for the progressive trainer."""
+# Lint as: python3
+"""Training driver."""
 
 from absl import app
 from absl import flags
 import gin
 
-from official.common import distribute_utils
 # pylint: disable=unused-import
 from official.common import registry_imports
-# pylint: enable=unused-import
+from official.common import distribute_utils
 from official.common import flags as tfm_flags
 from official.core import task_factory
+from official.core import train_lib
 from official.core import train_utils
 from official.modeling import performance
-from official.modeling.progressive import train_lib
+from official.vision.beta.projects.video_ssl.modeling import video_ssl_model
+from official.vision.beta.projects.video_ssl.tasks import linear_eval
+from official.vision.beta.projects.video_ssl.tasks import pretrain
+# pylint: disable=unused-import
 
 FLAGS = flags.FLAGS
 
@@ -40,6 +44,12 @@ def main(_):
     # may race against the train job for writing the same file.
     train_utils.serialize_config(params, model_dir)
 
+  if 'train_and_eval' in FLAGS.mode:
+    assert (params.task.train_data.feature_shape ==
+            params.task.validation_data.feature_shape), (
+                f'train {params.task.train_data.feature_shape} != validate '
+                f'{params.task.validation_data.feature_shape}')
+
   # Sets mixed_precision policy. Using 'mixed_float16' or 'mixed_bfloat16'
   # can have significant impact on model speeds by utilizing float16 in case of
   # GPUs, and bfloat16 in the case of TPUs. loss_scale takes effect only when
@@ -50,8 +60,7 @@ def main(_):
       distribution_strategy=params.runtime.distribution_strategy,
       all_reduce_alg=params.runtime.all_reduce_alg,
       num_gpus=params.runtime.num_gpus,
-      tpu_address=params.runtime.tpu,
-      **params.runtime.model_parallelism())
+      tpu_address=params.runtime.tpu)
   with distribution_strategy.scope():
     task = task_factory.get_task(params.task, logging_dir=model_dir)
 
