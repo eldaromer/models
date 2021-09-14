@@ -1,4 +1,4 @@
-from agents import ddpg_networks as networks
+from agents import sac_networks as networks
 import tensorflow as tf
 import tree
 
@@ -15,6 +15,7 @@ class SACAgent(object):
                 action_spec,
                 actor_net=networks.actor_net,
                 critic_net=networks.critic_net,
+                value_net=networks.value_net,
                 td_errors_loss=tf.losses.huber_loss,
                 dqda_clipping=0.,
                 actions_regularizer=0.,
@@ -35,11 +36,11 @@ class SACAgent(object):
         self._critic_net = tf.make_template(
             self.CRITIC_NET_SCOPE, critic_net, create_scope_now_=True)
         self._value_net = tf.make_template(
-            self.VALUE_NET_SCOPE, critic_net, create_scope_now_=True)
+            self.VALUE_NET_SCOPE, value_net, create_scope_now_=True)
         self._target_critic_net = tf.make_template(
             self.TARGET_CRITIC_NET_SCOPE, critic_net, create_scope_now_=True)
         self._target_value_net = tf.make_template(
-            self.TARGET_VALUE_NET_SCOPE, critic_net, create_scope_now_=True)
+            self.TARGET_VALUE_NET_SCOPE, value_net, create_scope_now_=True)
 
         self._td_errors_loss = td_errors_loss
         if dqda_clipping < 0:
