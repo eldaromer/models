@@ -34,12 +34,12 @@ class SACAgent(object):
             self.ACTOR_NET_SCOPE, actor_net, create_scope_now_=True)
         self._critic_net = tf.make_template(
             self.CRITIC_NET_SCOPE, critic_net, create_scope_now_=True)
-        self._critic_net2 = tf.make_template(
-            self.CRITIC_NET2_SCOPE, critic_net, create_scope_now_=True)
+        self._value_net = tf.make_template(
+            self.VALUE_NET_SCOPE, critic_net, create_scope_now_=True)
         self._target_critic_net = tf.make_template(
             self.TARGET_CRITIC_NET_SCOPE, critic_net, create_scope_now_=True)
-        self._target_critic_net2 = tf.make_template(
-            self.TARGET_CRITIC_NET2_SCOPE, critic_net, create_scope_now_=True)
+        self._target_value_net = tf.make_template(
+            self.TARGET_VALUE_NET_SCOPE, critic_net, create_scope_now_=True)
 
         self._td_errors_loss = td_errors_loss
         if dqda_clipping < 0:
