@@ -6,9 +6,9 @@ class SACAgent(object):
 
     ACTOR_NET_SCOPE = 'actor_net'
     CRITIC_NET_SCOPE = 'critic_net'
-    CRITIC_NET2_SCOPE = 'critic_net2'
+    VALUE_NET_SCOPE = 'value_net'
     TARGET_CRITIC_NET_SCOPE = 'target_critic_net'
-    TARGET_CRITIC_NET2_SCOPE = 'target_critic_net2'
+    TARGET_VALUE_NET_SCOPE = 'target_value_net'
 
     def __init__(self,
                  observation_spec,
