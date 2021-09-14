@@ -18,7 +18,7 @@
 
 import tensorflow as tf
 import gin.tf
-from agents import ddpg_agent
+from agents import sac_agent
 # pylint: disable=unused-import
 import cond_fn
 from utils import utils as uvf_utils
@@ -556,10 +556,10 @@ class MetaAgentCore(UvfAgentCore):
 
 
 @gin.configurable
-class UvfAgent(UvfAgentCore, ddpg_agent.TD3Agent):
+class UvfAgent(UvfAgentCore, sac_agent.SACAgent):
   """A DDPG agent with UVF.
   """
-  BASE_AGENT_CLASS = ddpg_agent.TD3Agent
+  BASE_AGENT_CLASS = sac_agent.SACAgent
   ACTION_TYPE = 'continuous'
 
   def __init__(self, *args, **kwargs):
@@ -567,10 +567,10 @@ class UvfAgent(UvfAgentCore, ddpg_agent.TD3Agent):
 
 
 @gin.configurable
-class MetaAgent(MetaAgentCore, ddpg_agent.TD3Agent):
+class MetaAgent(MetaAgentCore, sac_agent.SACAgent):
   """A DDPG meta-agent.
   """
-  BASE_AGENT_CLASS = ddpg_agent.TD3Agent
+  BASE_AGENT_CLASS = sac_agent.SACAgent
   ACTION_TYPE = 'continuous'
 
   def __init__(self, *args, **kwargs):
