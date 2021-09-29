@@ -1,5 +1,7 @@
 from agents import sac_networks as networks
 import tensorflow as tf
+import tensorflow_probability as tfp
+from agents.bijectors import ConditionalScale, ConditionalShift
 import tree
 
 class SACAgent(object):
@@ -42,6 +44,18 @@ class SACAgent(object):
         self._target_value_net = tf.make_template(
             self.TARGET_VALUE_NET_SCOPE, value_net, create_scope_now_=True)
 
+        base_distribution = tfp.distributions.MultivariateNormalDiag(
+          loc=tf.zeros(self._action_spec.shape),
+          scale_diag=tf.ones(self._action_spec.shape)
+        )
+
+        raw_action_distribution = tfp.bijectors.Chain((
+          ConditionalShift(name='shift'),
+          ConditionalScale(name='scale')
+        ))(base_distribution)
+
+        self.action_distribution = tfp.bijectors.Tanh()(raw_action_distribution)
+
         self._td_errors_loss = td_errors_loss
         if dqda_clipping < 0:
           raise ValueError('dqda_clipping must be >= 0.')
@@ -65,7 +79,12 @@ class SACAgent(object):
         ValueError: If `states` does not have the expected dimensions.
       """
       self._validate_states(states)
-      actions = self._actor_net(states, self._action_spec)
+      shift, scale = self._actor_net(states, self._action_spec)
+      actions = self.action_distribution.sample(self._action_spec.shape, scale=scale, shift=shift)
+
+      action_means = (action_spec.maximum + action_spec.minimum) / 2.0
+      action_magnitudes = (action_spec.maximum - action_spec.minimum) / 2.0
+      actions = action_means + action_magnitudes * actions
       if stop_gradients:
         actions = tf.stop_gradient(actions)
       return actions

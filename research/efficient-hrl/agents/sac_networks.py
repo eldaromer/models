@@ -25,7 +25,6 @@ with model-based acceleration" - Gu et al. https://arxiv.org/pdf/1603.00748.
 
 import tensorflow as tf
 import tensorflow_probability as tfp
-from agents.bijectors import ConditionalScale, ConditionalShift
 slim = tf.contrib.slim
 import gin.tf
 
@@ -187,18 +186,6 @@ def actor_net(states, action_spec,
     A tf.float32 [batch_size, num_action_dims] tensor of actions.
   """
 
-  base_distribution = tfp.distributions.MultivariateNormalDiag(
-    loc=tf.zeros(action_spec.shape),
-    scale_diag=tf.ones(action_spec.shape)
-  )
-
-  raw_action_distribution = tfp.bijectors.Chain((
-    ConditionalShift(name='shift'),
-    ConditionalScale(name='scale')
-  ))(base_distribution)
-
-  action_distribution = tfp.bijectors.Tanh()(raw_action_distribution)
-
   with slim.arg_scope(
       [slim.fully_connected],
       activation_fn=activation_fn,
@@ -223,12 +210,5 @@ def actor_net(states, action_spec,
       shift, scale = tf.split(actions, 2, 1)
       scale = tf.keras.layers.Lambda(lambda x: tf.math.softplus(x) + 1e-5)(scale)
 
-      actions = action_distribution.sample(action_spec.shape,
-        bijector_kwargs={'scale': {'scale': scale}, 'shift': {'shift': shift}}
-      )
 
-      action_means = (action_spec.maximum + action_spec.minimum) / 2.0
-      action_magnitudes = (action_spec.maximum - action_spec.minimum) / 2.0
-      actions = action_means + action_magnitudes * actions
-
-  return actions
+  return shift, scale
